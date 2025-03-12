@@ -10,6 +10,9 @@ import (
 
 var ListenAddr = ":8000"
 
+// not thread safe
+var Id = 0
+
 func main() {
 	app := App{}
 	app.Run()
@@ -48,24 +51,28 @@ func (p Peer) Uptime() time.Duration {
 	return time.Now().Sub(p.ConnectedAt)
 }
 
-func NewPeer(conn net.Conn) Peer {
+func NewPeer(conn net.Conn, channel chan Msg) Peer {
+	Id += 1
 	return Peer{
 		// fake ID
-		ID:          10,
+		ID:          Id,
 		conn:        conn,
 		Name:        conn.RemoteAddr().String(),
 		ConnectedAt: time.Now().UTC(),
+		channel:     channel,
 	}
 }
 
 func (p Peer) Run() {
+	slog.Info("starting an interactive session with", "peer", p.Name)
 	// Listen to peer messages
+	content := make([]byte, 258)
 	for {
-		content := make([]byte, 258)
 		_, err := p.Read(content)
 		if err != nil {
 			slog.Warn("unable to read from", "pear", p.Name)
 		}
+		fmt.Printf("%s > %s\n", p.Name, content)
 		msg := Msg{
 			Author:  p,
 			Content: content,
@@ -109,7 +116,7 @@ func (app *App) Run() {
 }
 
 func (app *App) HandleConn(conn net.Conn, msgChan chan Msg) {
-	peer := NewPeer(conn)
+	peer := NewPeer(conn, msgChan)
 	welcomeMsg := fmt.Sprintf("> Welcome %s\n", peer.Name)
 	fmt.Print(welcomeMsg)
 	if _, err := peer.Write([]byte(welcomeMsg)); err != nil {
