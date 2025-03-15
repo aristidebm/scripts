@@ -1,4 +1,4 @@
-.PHONY: serve telnet netcat
+.PHONY: serve telnet netcat format
 
 serve:
 	@go run chat.go
@@ -8,3 +8,6 @@ telnet:
 
 netcat:
 	@netcat localhost 8000
+
+format:
+	@go fmt .
