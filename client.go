@@ -197,14 +197,14 @@ func (client *APIClient) trackResponse(req *http.Request, resp *http.Response, e
 	} else {
 		status = fmt.Sprintf("%d %s", defaultStatusCode, err.Error())
 	}
-
-	log(client.repr(), "method", req.Method, "path", req.URL.Path, "status", status)
+    message := fmt.Sprintf("%s %s %s %s", client.repr(), req.Method, req.URL.Path, status) 
+    log(message)
 }
 
 func (client *APIClient) repr() string {
 	name := client.Name
 	if client.BaseURL != "" {
-		name = fmt.Sprintf("%s (baseURL: %s)", client.Name, client.BaseURL)
+		name = fmt.Sprintf("%s(%s)", client.Name, client.BaseURL)
 	}
 	return name
 }
